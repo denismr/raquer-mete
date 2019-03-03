@@ -167,8 +167,8 @@ uint8_t _countConnEq(uint8_t i, uint8_t j, uint8_t col) {
 }
 
 uint8_t countConnEq(uint8_t i, uint8_t j, uint8_t col) {
-  uint8_t ret = _countConnEq(i, j, col);
-  resetVisitedWDFS(i, j, col);
+  uint8_t ret = _countConnEq(i, j, col & 0xf);
+  resetVisitedWDFS(i, j, col & 0xf);
   return ret;
 }
 
