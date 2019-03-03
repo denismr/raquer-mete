@@ -17,7 +17,7 @@ Disclaimer about the name: it's a joke that only makes sense in Portuguese.
 ## Note
 First, I coded this game exclusively for fun.
 
-This code is a *complete* mess and sure isn't a good depiction of the usual quality of my code.
+This code is a *complete* **mess** and sure isn't a good depiction of the usual quality of my code.
 I'll admit that I have almost null experience with embedding programming. I just *felt* (with some reasoning) like the right thing to do would be to avoid any and all use of the heap (especially for larger structures), and also that I should store the most heavy and the most used structures as globals (although I'm usually strongly against global variables in any circumstance).
 
 Then one bad thing thing leads to another, and at the end of the day, I was writing important literals like the number of rows and columns inline so that changing even this minor aspect now is a headache :)
