@@ -1,5 +1,7 @@
 # Raquer * Mete
 
+![Screen shot](screenshot.png)
+
 It's a clone of the minigame [Hack*Match](https://www.youtube.com/watch?v=socMP6jpA_A) in the excellent [Exapunks](http://www.zachtronics.com/exapunks/), made for the [Pokitto](https://www.pokitto.com/).
 
 It's a rather faithful clone, including freezing time, combos, bombs, and same number of lines and columns. The most notable missing feature is the speed not increasing over time in this version.
