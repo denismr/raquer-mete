@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <functional>
 #include "Pokitto.h"
 #include "assets.h"
 
@@ -71,16 +72,16 @@ uint8_t mainmenu = 1;
 int score = 0;
 int highscore = 0;
 
-struct BtnHelder {
+struct BtnHolder {
   uint8_t frames;
-  uint8_t button;
+  std::function<const uint8_t(void)> isDown;
 
-  BtnHelder(uint8_t button) {
-    this->button = button;
+  BtnHolder(std::function<const uint8_t(void)> isDown) {
+    this->isDown = isDown;
   }
 
   bool operator()() {
-    if (pokitto.buttons.repeat(button, 1)) {
+    if (isDown()) {
       frames ++;
       return frames == 1 || frames == 6 || (frames >= 9 && frames & 1);
     } else {
@@ -90,8 +91,8 @@ struct BtnHelder {
   }
 };
 
-BtnHelder btnHelderLeft(BTN_LEFT);
-BtnHelder btnHelderRight(BTN_RIGHT);
+BtnHolder btnHolderLeft(pokitto.buttons.leftBtn);
+BtnHolder btnHolderRight(pokitto.buttons.rightBtn);
 
 void drawPiece(uint8_t x, uint8_t y, uint8_t piece_type, const uint8_t * bitmap) {
   uint8_t c[4] = {0, 0, 0, 11};
@@ -333,10 +334,10 @@ void checkInput() {
     }
     return;
   }
-  if (btnHelderRight() && robot_at != 6) {
+  if (btnHolderRight() && robot_at != 6) {
     robot_at++;
   }
-  if (btnHelderLeft() && robot_at != 0) {
+  if (btnHolderLeft() && robot_at != 0) {
     robot_at--;
   }
   if (pokitto.buttons.pressed(BTN_B)) {
