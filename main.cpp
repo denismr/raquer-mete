@@ -91,8 +91,10 @@ struct BtnHolder {
   }
 };
 
-BtnHolder btnHolderLeft(pokitto.buttons.leftBtn);
-BtnHolder btnHolderRight(pokitto.buttons.rightBtn);
+// BtnHolder btnHolderLeft(pokitto.buttons.leftBtn);
+BtnHolder btnHolderLeft([](){return Pokitto::heldStates[BTN_LEFT];});
+// BtnHolder btnHolderRight(pokitto.buttons.rightBtn);
+BtnHolder btnHolderRight([](){return Pokitto::heldStates[BTN_RIGHT];});
 
 void drawPiece(uint8_t x, uint8_t y, uint8_t piece_type, const uint8_t * bitmap) {
   uint8_t c[4] = {0, 0, 0, 11};
