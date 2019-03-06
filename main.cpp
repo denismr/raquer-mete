@@ -74,9 +74,9 @@ int highscore = 0;
 
 struct BtnHolder {
   uint8_t frames;
-  std::function<const uint8_t(void)> isDown;
+  std::function<uint8_t(void)> isDown;
 
-  BtnHolder(std::function<const uint8_t(void)> isDown) {
+  BtnHolder(std::function<uint8_t(void)> isDown) {
     this->isDown = isDown;
   }
 
