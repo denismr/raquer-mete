@@ -3,6 +3,8 @@
 #include "Pokitto.h"
 #include "assets.h"
 
+const uint16_t cSaveAddress = 3080;
+
 // Display size: 110x88
 
 // In the board, each cell has one byte with this
@@ -26,7 +28,6 @@ const uint8_t mask_gset_v2 =  0b00100000;
 
 const uint8_t mask_gset_lock  =  0b10000000;
 const uint8_t mask_gset_bonus =  0b01000000;
-
 
 const uint8_t *sprites_pieces[] = {
   sprite_piece1,
@@ -69,8 +70,8 @@ uint8_t paused = 0;
 uint8_t gameover = 0;
 uint8_t mainmenu = 1;
 
-int score = 0;
-int highscore = 0;
+uint32_t score = 0;
+uint32_t highscore = 0;
 
 struct BtnHolder {
   uint8_t frames;
@@ -95,12 +96,6 @@ DigitalIn _leftPin(P1_25);
 DigitalIn _rightPin(P1_7);
 BtnHolder btnHolderLeft([](){return _leftPin;});
 BtnHolder btnHolderRight([](){return _rightPin;});
-
-// The dead that were left behind:
-// BtnHolder btnHolderLeft(pokitto.buttons.leftBtn);
-// BtnHolder btnHolderLeft([](){return Pokitto::heldStates[BTN_LEFT];});
-// BtnHolder btnHolderRight(pokitto.buttons.rightBtn);
-// BtnHolder btnHolderRight([](){return Pokitto::heldStates[BTN_RIGHT];});
 
 void drawPiece(uint8_t x, uint8_t y, uint8_t piece_type, const uint8_t * bitmap) {
   uint8_t c[4] = {0, 0, 0, 11};
@@ -135,16 +130,49 @@ void drawPiece(uint8_t x, uint8_t y, const uint8_t * bitmap) {
   }
 }
 
+template <typename T>
+struct SaveBlock {
+  T payload;
+  uint16_t checksum;
+};
+
+template <typename T>
+uint16_t High2CheckFletcher(const T& payload) {
+  const uint8_t * bytes = reinterpret_cast<const uint8_t*>(&payload);
+  uint8_t C0 = 0;
+  uint8_t C1 = 0;
+  for (size_t i = 0; i < sizeof(T); i++) {
+    C0 += bytes[i];
+    C1 += C0;
+  }
+  return (static_cast<uint16_t>(C0) << 8) | (static_cast<uint16_t>(C1));
+}
+
+void SaveHighscore() {
+  SaveBlock<uint32_t> sb;
+  sb.payload = highscore;
+  sb.checksum = High2CheckFletcher(sb.payload);
+  EEPROM.put(static_cast<int>(cSaveAddress), sb);
+}
+
+void LoadHighscore() {
+  SaveBlock<uint32_t> sb;
+  EEPROM.get(static_cast<int>(cSaveAddress), sb);
+  if (sb.checksum == High2CheckFletcher(sb.payload)) {
+    highscore = sb.payload;
+  }
+}
+
 void config() {
   pokitto.begin(); 
   pokitto.setFrameRate(30);
   srand(pokitto.getTime());
   pokitto.display.load565Palette(game_palette);
   pokitto.display.bgcolor = 0;
-  pokitto.display.setFont(font3x5);
   for (int i = 0; i < 11; i += 1) {
     rows[i] = &_board[7 * i];
   }
+  LoadHighscore();
 }
 
 void resetVisitedWDFS(uint8_t i, uint8_t j, uint8_t col) {
@@ -271,7 +299,7 @@ void generateBomb() {
 
 void drawPlayer() {
   pokitto.display.setColor(14);
-  pokitto.display.fillRectangle(0, 79, 110, 0);
+  pokitto.display.fillRectangle(8, 79, 60, 0);
 
   pokitto.display.setColor(15);
   pokitto.display.fillRectangle(10 + 8 * robot_at, 0, 8, 88);
@@ -329,10 +357,17 @@ void restartBoard() {
   mainmenu = 0;
 }
 
+void UpdateHighscore() {
+  if (highscore < score) {
+    highscore = score;
+    SaveHighscore();
+  }
+}
+
 void checkInput() {
   if (gameover) {
     if (pokitto.buttons.pressed(BTN_C)) {
-      highscore = max(score, highscore);
+      UpdateHighscore();
       mainmenu = 1;
     }
     return;
@@ -438,8 +473,6 @@ void finishFrozen() {
     remaining_delay = restart_delay_value;
     frozen = 0;
   }
-
-  // highscore = max(score, highscore);
 }
 
 bool checkGameOver() {
@@ -450,6 +483,7 @@ bool checkGameOver() {
 }
 
 void ingame() {
+  pokitto.display.drawBitmap(0, 0, game_background);
   checkInput();
 
   if (!gameover && !paused) {
@@ -473,51 +507,41 @@ void ingame() {
   }
 
   pokitto.display.setColor(1);
-  pokitto.display.setCursor(76, 10);
+  pokitto.display.setCursor(78, 10);
   pokitto.display.print("Score:");
-  pokitto.display.setCursor(76, 18);
+  pokitto.display.setCursor(78, 17);
   pokitto.display.print(score);
   pokitto.display.setColor(3);
-  pokitto.display.setCursor(76, 26);
+  pokitto.display.setCursor(78, 26);
   pokitto.display.print("HScore:");
-  pokitto.display.setCursor(76, 34);
+  pokitto.display.setCursor(78, 33);
   pokitto.display.print(highscore);
-  pokitto.display.setCursor(76, 44);
 
   if (!paused && !gameover) {
     drawPlayer();
   } else if(gameover) {
     pokitto.display.setColor(1);
-    pokitto.display.setCursor(0, 82);
-    pokitto.display.print("  GAME OVER           (PRESS C)");
+    pokitto.display.setCursor(14, 82);
+    pokitto.display.print("GAME OVER (C)");
   } else {
     pokitto.display.setColor(5);
-    pokitto.display.setCursor(0, 82);
-    pokitto.display.print("  PAUSED              (PRESS C)");
+    pokitto.display.setCursor(19, 82);
+    pokitto.display.print("PAUSED (C)");
   }
   drawBoard();
 }
 
 char str_highscore[10];
 void inmainmenu() {
-  pokitto.display.setFont(fontAdventurer);
-  pokitto.display.setColor(1);
-  pokitto.display.setCursor(30, 10);
-  pokitto.display.print("Raquer");
-  pokitto.display.setCursor(45, 30);
-  pokitto.display.print("Mete");
-  pokitto.display.setColor(5);
-  pokitto.display.setCursor(32, 32);
-  pokitto.display.print("*");
-
+  pokitto.display.drawBitmap(0, 0, menu_background);
   pokitto.display.setFont(fontKoubit);
-  pokitto.display.setCursor(25, 50);
+  pokitto.display.setCursor(25, 55);
   pokitto.display.setColor(3);
   pokitto.display.print("High score");
   pokitto.display.setFont(fontDonut);
   pokitto.display.setColor(5);
-  pokitto.display.setCursor(22, 58);
-  sprintf(str_highscore, "%9d", highscore);
+  pokitto.display.setCursor(22, 63);
+  sprintf(str_highscore, "%9lu", highscore);
   for (int i = 0; str_highscore[i]; i++) {
     if (str_highscore[i] == ' ') str_highscore[i] = '-';
   }
@@ -538,11 +562,10 @@ void inmainmenu() {
 
 int main() {
   config();
+  pokitto.display.setInvisibleColor(0);
 
   while (pokitto.isRunning()) {
     if (pokitto.update()) {
-      pokitto.display.clear();
-
       if (mainmenu) {
         inmainmenu();
       } else {
