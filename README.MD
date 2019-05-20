@@ -20,6 +20,6 @@ First, I coded this game exclusively for fun.
 This code is a *complete* **mess** and sure isn't a good depiction of the usual quality of my code.
 I'll admit that I have almost null experience with embedding programming. I started it simple, then one bad practice led to another, and at the end of the day, I was writing important literals like the number of rows and columns inline so that changing even this minor aspect now is a headache :)
 
-I'd rather not comment about the currently impossibility of writing unit tests for this.
+I'd rather not comment about the current impossibility of writing unit tests for this.
 
 I'm sorry for that. It was nonetheless a fun day coding it, the game **works** on the Pokitto (and on the [emulator](https://github.com/felipemanga/PokittoEmu) as well) and I finally can play it anywhere. 
