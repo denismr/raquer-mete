@@ -1,6 +1,6 @@
 # Raquer * Mete
 
-![Screen shot](screenshot.png)
+![Screen shot](screenshot.png) ![Photo](raquermete.jpg)
 
 It's a clone of the minigame [Hack*Match](https://www.youtube.com/watch?v=socMP6jpA_A) in the excellent [Exapunks](http://www.zachtronics.com/exapunks/), made for the [Pokitto](https://www.pokitto.com/).
 
